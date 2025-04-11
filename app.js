@@ -2673,20 +2673,13 @@ function calculateBoundingBox(centerLat, centerLng, radiusMeters) {
 
 // --- ДОБАВЛЕНО: Заглушка для получения событий (замените на реальный API) ---
 async function fetchNearbyEventsAPI(position, radius) {
-    console.log(`Запрос событий с бэкенда: радиус ${radius}м от`, position);
-
-    // Формируем URL для запроса к нашему локальному серверу
-    const backendUrl = new URL('http://localhost:3001/api/events');
-    backendUrl.searchParams.append('lat', position.lat);
-    backendUrl.searchParams.append('lon', position.lng); // Бэкенд ожидает 'lon'
-    backendUrl.searchParams.append('radius', radius);
-    // backendUrl.searchParams.append('days', 7); // Можно добавить, если нужно
-
+    console.log(`[fetchNearbyEventsAPI] Запрос к бэкенду: lat=${position.lat}, lon=${position.lng}, radius=${radius}`);
     try {
-        const response = await fetch(backendUrl.toString());
+        // Используем относительный URL, который будет работать на Render
+        const response = await fetch(`/api/events?lat=${position.lat}&lon=${position.lng}&radius=${radius}`);
 
         if (!response.ok) {
-            // Попробуем прочитать тело ошибки, если оно есть
+            // Попробуем получить текст ошибки с сервера
             let errorDetails = 'Не удалось получить детали ошибки';
             try {
                 const errorData = await response.json();
