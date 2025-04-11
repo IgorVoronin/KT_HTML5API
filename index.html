@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Guide - Путеводитель по городу</title>
+    <!-- Подключаем стили -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Удаляем лишние подключения Leaflet -->
+
+    <!-- Yandex Maps API -->
+    <script>
+        let yandexMapsLoaded = false;
+        let yandexMapsLoadAttempts = 0;
+        const MAX_LOAD_ATTEMPTS = 3;
+        const LOAD_TIMEOUT = 10000; // 10 секунд таймаут
+        let yandexMapsApiReady = false;
+
+        function loadYandexMapsApi() {
+            if (yandexMapsLoadAttempts >= MAX_LOAD_ATTEMPTS) {
+                showNotification('Не удалось загрузить карту после нескольких попыток. Пожалуйста, проверьте подключение к интернету и перезагрузите страницу.', 'error');
+                return;
+            }
+
+            yandexMapsLoadAttempts++;
+            console.log(`Попытка загрузки API Яндекс.Карт ${yandexMapsLoadAttempts}/${MAX_LOAD_ATTEMPTS}`);
+
+            // Удаляем существующий скрипт, если есть
+            const existingScript = document.querySelector('script[src*="api-maps.yandex.ru"]');
+            if (existingScript) {
+                existingScript.remove();
+            }
+
+            const script = document.createElement('script');
+            script.src = 'https://api-maps.yandex.ru/2.1/?apikey=6e71952c-f0be-4891-8c47-e015f6f08b18&lang=ru_RU&load=package.full';
+            script.async = true;
+
+            // Устанавливаем таймаут для проверки загрузки
+            const timeoutId = setTimeout(() => {
+                if (!yandexMapsLoaded) {
+                    console.error('Таймаут загрузки API Яндекс.Карт');
+                    loadYandexMapsApi(); // Повторная попытка
+                }
+            }, LOAD_TIMEOUT);
+
+            script.onload = function () {
+                console.log('API Яндекс.Карт загружен');
+                clearTimeout(timeoutId);
+
+                // Проверяем, что ymaps доступен
+                if (typeof window.ymaps !== 'undefined') {
+                    window.ymaps.ready(() => {
+                        console.log('API Яндекс.Карт инициализирован');
+                        yandexMapsLoaded = true;
+                        window.yandexMapsApiReady = true;
+                    });
+                } else {
+                    console.error('API Яндекс.Карт не инициализирован');
+                    loadYandexMapsApi(); // Повторная попытка
+                }
+            };
+
+            script.onerror = function () {
+                console.error('Ошибка загрузки API Яндекс.Карт');
+                clearTimeout(timeoutId);
+                loadYandexMapsApi(); // Повторная попытка
+            };
+
+            document.head.appendChild(script);
+        }
+
+        // Запускаем загрузку API
+        loadYandexMapsApi();
+    </script>
+    <style>
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            color: white;
+            display: none;
+            z-index: 1000;
+        }
+
+        .notification.info {
+            background-color: #2196F3;
+        }
+
+        .notification.success {
+            background-color: #4CAF50;
+        }
+
+        .notification.error {
+            background-color: #f44336;
+        }
+
+        #weather-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .weather-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .weather-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .weather-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        #weather-info h3 {
+            margin: 0 0 15px 0;
+            color: #2196F3;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="notification" class="notification"></div>
+    <!-- Приветственная страница -->
+    <div id="welcome-screen" class="welcome-screen">
+        <div class="welcome-content">
+            <h1>Добро пожаловать в Путеводитель по городу!</h1>
+            <div class="welcome-logo">
+                <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" alt="Логотип приложения">
+            </div>
+            <div class="welcome-description">
+                <h2>Исследуйте город с комфортом</h2>
+                <p>Наше приложение поможет вам открыть для себя новые места,
+                    спланировать маршруты и сохранить ваши впечатления.</p>
+
+                <h3>Основные возможности:</h3>
+                <ul>
+                    <li><strong>Карта города</strong> - Определение вашего местоположения и навигация по городу</li>
+                    <li><strong>Интересные места</strong> - Поиск и информация о достопримечательностях</li>
+                    <li><strong>Маршруты</strong> - Построение оптимальных маршрутов до выбранных мест</li>
+                    <li><strong>Погода</strong> - Актуальные данные о погоде в любой точке города</li>
+                    <li><strong>Фотогалерея</strong> - Сохранение фотографий из вашего путешествия</li>
+                </ul>
+
+                <p>Все данные сохраняются локально в вашем браузере и будут доступны даже после его закрытия.</p>
+            </div>
+            <button id="start-app-btn" class="start-app-btn">Начать исследование</button>
+        </div>
+    </div>
+
+    <header>
+        <h1>Путеводитель по городу</h1>
+        <nav>
+            <ul>
+                <li><a href="#" id="nav-map" class="active">Мои места</a></li>
+                <li><a href="#" id="nav-places">Интересные места</a></li>
+                <li><a href="#" id="nav-events">События</a></li>
+                <li><a href="#" id="nav-gallery">Фотогалерея</a></li>
+                <li><a href="#" id="nav-about">О приложении</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="map-container" class="active-section">
+            <div class="map-layout">
+                <!-- Левая боковая панель (для списков) -->
+                <div class="left-sidebar">
+                    <!-- Панель "Мои места" -->
+                    <div id="my-places-container" class="sidebar-panel active"> <!-- Показываем по умолчанию -->
+                        <h3>Мои места</h3>
+                        <div id="my-places-list" class="sidebar-content">
+                            <!-- Карточки маркеров будут добавлены сюда -->
+                            <div class="no-markers-message">Пока нет сохраненных мест. Добавьте маркер на карту.</div>
+                        </div>
+                    </div>
+
+                    <!-- Панель "События" (список) - УДАЛЯЕМ -->
+                    <!-- <div id="events-list-container" class="sidebar-panel"> ... </div> -->
+
+                    <!-- TODO: Добавить панель для Галереи сюда -->
+
+                </div>
+
+                <div class="map-sidebar"> <!-- Центральная панель с картой -->
+                    <div id="map"></div>
+                    <div class="controls">
+                        <button id="btn-current-location">Мое местоположение</button>
+                        <button id="btn-center-map">Центрировать карту</button>
+                        <button id="btn-set-custom-location">Выбрать местоположение</button>
+                        <button id="btn-add-marker">Добавить маркер</button>
+                        <button id="btn-clear-markers">Очистить маркеры</button>
+                    </div>
+
+                    <div id="places-controls" class="controls-panel hidden">
+                        <h3>Поиск интересных мест</h3>
+                        <div class="search-options">
+                            <select id="place-category">
+                                <option value="tourism">Все туристические места</option>
+                                <option value="tourism=attraction">Достопримечательности</option>
+                                <option value="tourism=museum">Музеи</option>
+                                <option value="tourism=gallery">Галереи</option>
+                                <option value="tourism=viewpoint">Смотровые площадки</option>
+                                <option value="historic">Исторические места</option>
+                                <option value="amenity=restaurant">Рестораны</option>
+                                <option value="amenity=cafe">Кафе</option>
+                                <option value="amenity=theatre">Театры</option>
+                                <option value="amenity=cinema">Кинотеатры</option>
+                                <option value="shop">Магазины</option>
+                            </select>
+                            <div class="radius-container">
+                                <input type="range" id="search-radius" min="500" max="5000" step="500" value="1000">
+                                <span id="radius-value">1000 м</span>
+                            </div>
+                        </div>
+                        <!-- Обертка для кнопок поиска и очистки -->
+                        <div class="search-actions">
+                            <button id="btn-search-places">Найти ближайшие места</button>
+                            <button id="btn-clear-search-results" class="btn-clear-search hidden">Очистить
+                                карту</button>
+                        </div>
+                        <div id="places-loading" class="loading-indicator">
+                            <div class="spinner"></div>
+                            <p>Поиск ближайших мест...</p>
+                        </div>
+                        <!-- Контейнер для списка найденных мест -->
+                        <div id="places-list">
+                            <!-- Результаты поиска будут добавлены сюда -->
+                        </div>
+                        <div class="no-results hidden" id="no-places-results">
+                            Не найдено мест в заданном радиусе. Попробуйте увеличить радиус поиска или выбрать другую
+                            категорию.
+                        </div>
+                    </div>
+
+                    <!-- Панель управления Событиями -->
+                    <div id="events-controls" class="controls-panel hidden">
+                        <h3>Ближайшие события</h3>
+                        <div class="search-options">
+                            <div class="radius-container">
+                                <label for="event-radius">Радиус:</label>
+                                <input type="range" id="event-radius" min="500" max="10000" step="500" value="2000">
+                                <span id="event-radius-value">2000 м</span>
+                            </div>
+                            <!-- Можно добавить фильтр по дате или категории -->
+                        </div>
+                        <!-- ДОБАВЛЕНО: Кнопка поиска событий -->
+                        <button id="btn-search-events" style="margin-bottom: 1rem;">Найти события</button>
+                        <!-- КОНЕЦ ДОБАВЛЕНИЯ -->
+
+                        <div id="events-loading" class="loading-indicator">
+                            <div class="spinner"></div>
+                            <p>Поиск ближайших событий...</p>
+                        </div>
+                        <!-- Контейнер для списка событий -->
+                        <div id="events-list" class="sidebar-content" style="padding-top: 0;">
+                            <!-- Карточки событий будут добавлены сюда -->
+                        </div>
+                        <div class="no-results hidden" id="no-events-results">
+                            Не найдено событий в заданном радиусе.
+                        </div>
+                    </div>
+
+                    <div id="weather-info">
+                        <h3>Погода</h3>
+                        <div id="weather-data">
+                            <div class="weather-item">
+                                <span class="weather-label">Температура:</span>
+                                <span class="weather-value" id="weather-temp">--°C</span>
+                            </div>
+                            <div class="weather-item">
+                                <span class="weather-label">Влажность:</span>
+                                <span class="weather-value" id="weather-humidity">--%</span>
+                            </div>
+                            <div class="weather-item">
+                                <span class="weather-label">Ветер:</span>
+                                <span class="weather-value" id="weather-wind">-- м/с</span>
+                            </div>
+                            <div class="weather-item">
+                                <span class="weather-label">Облачность:</span>
+                                <span class="weather-value" id="weather-clouds">--%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="place-details" class="place-details-panel hidden"> <!-- Панель справа -->
+                    <div class="place-details-header">
+                        <h3>Информация о месте</h3>
+                        <button id="btn-close-details" class="btn-close">×</button>
+                    </div>
+                    <div id="place-details-content">
+                        <div class="no-place-selected">
+                            Выберите место на карте, чтобы увидеть подробную информацию
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="gallery-container" class="section">
+            <h2>Фотогалерея</h2>
+            <div id="gallery"></div>
+        </section>
+
+        <!-- ДОБАВЛЯЕМ СЕКЦИЮ "О ПРИЛОЖЕНИИ" -->
+        <section id="about-container" class="section">
+            <div class="about-content welcome-content">
+                <h1>О приложении "Путеводитель по городу"</h1>
+
+                <!-- Опционально: оставляем или убираем логотип -->
+                <div class="welcome-logo">
+                    <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" alt="Логотип приложения">
+                </div>
+
+                <div class="welcome-description">
+                    <!-- Используем вводный текст из "О приложении" -->
+                    <p>Это веб-приложение создано, чтобы помочь вам исследовать город, находить интересные места и
+                        сохранять свои впечатления.</p>
+
+                    <!-- Блок "Ключевые возможности" -->
+                    <h3>Ключевые возможности:</h3>
+                    <ul>
+                        <li><strong>Интерактивная карта:</strong> Добавляйте свои места и просматривайте их на карте.
+                        </li>
+                        <li><strong>Поиск мест:</strong> Находите рестораны, музеи, достопримечательности и другие
+                            интересные места поблизости.</li>
+                        <li><strong>События:</strong> Узнавайте о ближайших мероприятиях в городе.</li>
+                        <li><strong>Детали и маршруты:</strong> Просматривайте информацию о местах/событиях и стройте к
+                            ним маршруты.</li>
+                        <li><strong>Погода:</strong> Будьте в курсе актуальной погоды.</li>
+                        <li><strong>Фотогалерея:</strong> Прикрепляйте фотографии к своим местам и просматривайте их.
+                        </li>
+                        <li><strong>Локальное хранение:</strong> Все ваши данные сохраняются в браузере.</li>
+                    </ul>
+
+                    <!-- Блок "Используемые технологии" -->
+                    <h3>Используемые технологии:</h3>
+                    <ul>
+                        <li>HTML5, CSS3, JavaScript</li>
+                        <li>API Яндекс.Карт</li>
+                        <li>API OpenWeatherMap</li>
+                        <li>HTML5 Geolocation & LocalStorage</li>
+                    </ul>
+
+                    <p>Надеемся, приложение будет вам полезно!</p>
+                </div>
+                <!-- Кнопка "Вернуться" со стилем приветственной страницы -->
+                <button id="btn-back-from-about" class="start-app-btn">Вернуться к исследованию</button>
+            </div>
+        </section>
+        <!-- КОНЕЦ ДОБАВЛЕНИЯ -->
+
+    </main>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Добавить маркер</h2>
+            <form id="marker-form">
+                <div class="form-group">
+                    <label for="marker-name">Название:</label>
+                    <input type="text" id="marker-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="marker-description">Описание:</label>
+                    <textarea id="marker-description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="marker-category">Категория:</label>
+                    <select id="marker-category">
+                        <option value="attraction">Достопримечательность</option>
+                        <option value="restaurant">Ресторан</option>
+                        <option value="hotel">Отель</option>
+                        <option value="shop">Магазин</option>
+                        <option value="other">Другое</option>
+                    </select>
+                </div>
+                <button type="submit" id="save-marker">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content confirm-content">
+            <span class="close confirm-close">&times;</span>
+            <h2>Подтвердите действие</h2>
+            <p id="confirm-message">Вы уверены, что хотите удалить все маркеры? Это действие нельзя будет отменить.</p>
+            <div class="confirm-actions">
+                <button id="confirm-delete-btn" class="btn-delete">Удалить все</button>
+                <button id="cancel-delete-btn" class="btn-cancel">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрытый инпут для загрузки фото к маркерам -->
+    <input type="file" id="hidden-photo-input" accept="image/*" style="display: none;">
+
+    <!-- Модальное окно просмотра фото -->
+    <div id="photo-modal" class="modal">
+        <span class="close photo-modal-close">&times;</span>
+        <div class="photo-modal-content">
+            <img id="photo-modal-image" src="" alt="Просмотр фото">
+            <!-- Удаляем блок с информацией -->
+            <!--
+            <div id="photo-modal-info">
+                <h3 id="photo-modal-title"></h3>
+                <p id="photo-modal-description"></p>
+                <p><small id="photo-modal-date"></small></p>
+            </div>
+            -->
+            <!-- Подключаем наш скрипт -->
+            <script src="app.js"></script>
+        </div>
+    </div>
+</body>
+
+</html>

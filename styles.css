@@ -1,0 +1,1277 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+}
+
+header {
+    background-color: #1976d2;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+header h1 {
+    margin-bottom: 1rem;
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    justify-content: center;
+    gap: 2rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+nav a:hover,
+nav a.active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+main {
+    flex: 1;
+    padding: 1rem;
+    width: 100%;
+}
+
+.section,
+.active-section {
+    display: none;
+    margin-top: 1rem;
+}
+
+.active-section {
+    display: block;
+}
+
+#map-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.map-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr 400px;
+    gap: 1rem;
+    width: 100%;
+}
+
+.map-sidebar {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-width: 400px;
+    overflow-y: auto;
+}
+
+#map {
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    height: 60vh;
+}
+
+.place-details-panel {
+    width: 400px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.3s ease, opacity 0.3s ease, visibility 0.3s ease, padding 0.3s ease, margin-left 0.3s ease;
+    visibility: visible;
+    opacity: 1;
+    padding: 0;
+}
+
+.place-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.place-details-header h3 {
+    margin: 0;
+    color: #1976d2;
+}
+
+.btn-close {
+    background: none;
+    color: #666;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.btn-close:hover {
+    background-color: #e0e0e0;
+}
+
+#place-details-content {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.no-place-selected {
+    color: #666;
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.place-detail-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.place-detail-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.place-detail-category {
+    display: inline-block;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.place-detail-name {
+    margin: 0;
+    color: #1976d2;
+    font-size: 1.5rem;
+}
+
+.place-detail-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.place-detail-address {
+    color: #666;
+}
+
+.place-detail-distance {
+    font-weight: bold;
+    color: #333;
+}
+
+.place-detail-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.place-detail-actions button {
+    flex: 1;
+}
+
+.controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+button {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #1565c0;
+}
+
+/* Стиль для активной кнопки */
+.active-btn {
+    background-color: #f44336 !important;
+}
+
+.active-btn:hover {
+    background-color: #d32f2f !important;
+}
+
+/* Стили для уведомлений (toast) */
+#toast {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 25px;
+    padding: 16px;
+    position: fixed;
+    z-index: 3000;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+#toast.show {
+    visibility: visible;
+    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@keyframes fadein {
+    from {
+        bottom: 0;
+        opacity: 0;
+    }
+
+    to {
+        bottom: 30px;
+        opacity: 1;
+    }
+}
+
+@keyframes fadeout {
+    from {
+        bottom: 30px;
+        opacity: 1;
+    }
+
+    to {
+        bottom: 0;
+        opacity: 0;
+    }
+}
+
+#weather-info {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+/* Стили для панели управления поиском мест */
+.controls-panel {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+.controls-panel h3 {
+    margin-bottom: 0.8rem;
+    color: #1976d2;
+}
+
+.controls-panel .search-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.radius-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#place-category {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#search-radius {
+    min-width: 150px;
+    max-width: 300px;
+}
+
+#radius-value {
+    min-width: 70px;
+}
+
+#btn-search-places {
+    padding: 0.7rem 1rem;
+    font-weight: bold;
+}
+
+.places-map-container {
+    margin-bottom: 1rem;
+}
+
+#places-map {
+    height: 300px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+}
+
+#places-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.place-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.place-card-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.place-info {
+    flex: 1;
+}
+
+.place-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.place-card.highlight {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+    border: 2px solid #1976d2;
+}
+
+.place-card h3 {
+    margin-bottom: 0.25rem;
+    color: #1976d2;
+}
+
+.place-details {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.place-category {
+    display: inline-block;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.place-distance {
+    font-weight: bold;
+}
+
+.place-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.place-actions button {
+    white-space: nowrap;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+/* Индикатор загрузки */
+.loading-indicator {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+}
+
+.loading-indicator.active {
+    display: block;
+}
+
+.no-results {
+    text-align: center;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    color: #666;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: #1976d2;
+    margin: 0 auto 1rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.gallery-item {
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    display: block;
+}
+
+/* --- ДОБАВЛЕНО: Стили для информации внутри карточки галереи --- */
+.gallery-item-info {
+    padding: 10px;
+    background-color: #f9f9f9;
+    /* Светлый фон для текста */
+    border-top: 1px solid #eee;
+    /* Линия между фото и текстом */
+}
+
+.gallery-item-info h4 {
+    margin: 0 0 5px 0;
+    font-size: 0.9em;
+    color: #333;
+}
+
+.gallery-item-info p {
+    margin: 0 0 5px 0;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.gallery-item-info p:last-child {
+    margin-bottom: 0;
+}
+
+/* --- КОНЕЦ ДОБАВЛЕНИЯ --- */
+
+#photo-upload {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Marker popup styles */
+.leaflet-popup-content {
+    max-width: 250px;
+}
+
+.marker-info h3 {
+    margin-bottom: 0.5rem;
+}
+
+.marker-info p {
+    margin-bottom: 0.5rem;
+}
+
+.marker-info .category {
+    display: inline-block;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.marker-info .date {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+/* Стили для приветственной страницы */
+.welcome-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.welcome-content {
+    max-width: 800px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    text-align: center;
+}
+
+.welcome-logo {
+    margin: 20px 0;
+}
+
+.welcome-logo img {
+    width: 120px;
+    height: 120px;
+}
+
+.welcome-description {
+    text-align: left;
+    margin: 30px 0;
+}
+
+.welcome-description h2 {
+    color: #1976d2;
+    margin-bottom: 15px;
+}
+
+.welcome-description h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.welcome-description ul {
+    padding-left: 20px;
+    margin-bottom: 20px;
+}
+
+.welcome-description li {
+    margin-bottom: 8px;
+}
+
+.start-app-btn {
+    background-color: #1976d2;
+    color: white;
+    font-size: 1.2rem;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+.start-app-btn:hover {
+    background-color: #1565c0;
+}
+
+.return-app-btn {
+    background-color: #607d8b;
+    color: white;
+    font-size: 1.2rem;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+    margin-right: 10px;
+}
+
+.return-app-btn:hover {
+    background-color: #455a64;
+}
+
+/* Возвращаем старый стиль для .hidden */
+.hidden {
+    display: none !important;
+}
+
+/* Стили для окна с ошибками поддержки браузера */
+.browser-support-error {
+    position: fixed;
+    z-index: 3000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.browser-support-error h2 {
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+}
+
+.browser-support-error p {
+    color: #fff;
+    margin-bottom: 20px;
+    max-width: 600px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.browser-support-error ul {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 20px 40px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    max-width: 600px;
+}
+
+.browser-support-error li {
+    color: #ff9800;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.browser-support-error button {
+    background-color: #4caf50;
+    color: white;
+    font-size: 16px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.browser-support-error button:hover {
+    background-color: #388e3c;
+}
+
+/* Стили для секции интересных мест */
+#places-container {
+    margin-top: 1rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+}
+
+#places-container h2 {
+    margin-bottom: 1rem;
+    color: #1976d2;
+}
+
+.no-results {
+    text-align: center;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    color: #666;
+}
+
+.controls,
+.controls-panel,
+#weather-info {
+    flex-shrink: 0;
+}
+
+/* Стили для балуна маркера */
+.marker-info-balloon {
+    font-size: 14px;
+}
+
+.marker-info-balloon h3 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: #1976d2;
+}
+
+.marker-info-balloon p {
+    margin: 3px 0;
+}
+
+.marker-info-balloon p small {
+    color: #777;
+    font-size: 12px;
+}
+
+.balloon-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.balloon-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: none;
+    color: white;
+}
+
+.btn-delete {
+    background-color: #f44336;
+}
+
+.btn-delete:hover {
+    background-color: #d32f2f;
+}
+
+.btn-route {
+    background-color: #4CAF50;
+}
+
+.btn-route:hover {
+    background-color: #388e3c;
+}
+
+/* Стили для модального окна подтверждения */
+.confirm-content {
+    text-align: center;
+}
+
+.confirm-content h2 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.confirm-content p {
+    margin-bottom: 25px;
+    color: #666;
+    line-height: 1.5;
+}
+
+.confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.confirm-actions button {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.btn-cancel {
+    background-color: #aaa;
+}
+
+.btn-cancel:hover {
+    background-color: #888;
+}
+
+/* Стили для панели "Мои места" */
+.my-places-panel {
+    width: 350px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 2rem 1rem;
+}
+
+.my-places-panel h3 {
+    padding: 1rem;
+    margin: 0;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+    color: #1976d2;
+}
+
+.my-places-list-content {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.no-markers-message {
+    color: #666;
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+/* Стили для карточки маркера */
+.marker-card {
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s;
+    cursor: pointer;
+}
+
+.marker-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.marker-card.highlight {
+    border-color: #1976d2;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+}
+
+.marker-card h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    color: #1976d2;
+}
+
+.marker-card p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.marker-card p strong {
+    color: #333;
+}
+
+.marker-card p small {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+/* Стили для скрытой панели */
+.place-details-panel.collapsed {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.btn-clear-search:hover {
+    background-color: #d32f2f;
+}
+
+/* Обертка для кнопок поиска и очистки */
+.search-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: center;
+    /* Выравниваем кнопки по вертикали */
+}
+
+/* Заставляем кнопку очистки быть всегда красной */
+#btn-clear-search-results {
+    background-color: #f44336 !important;
+}
+
+#btn-clear-search-results:hover {
+    background-color: #d32f2f !important;
+    /* Опционально: немного темнее при наведении */
+}
+
+/* --- ДОБАВЛЕНО: Стили для карточки события --- */
+.event-card {
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease;
+    display: flex;
+    /* Используем flexbox для выравнивания */
+    justify-content: space-between;
+    /* Распределяем пространство */
+    align-items: center;
+    /* Выравниваем по центру */
+}
+
+.event-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.event-card.highlight {
+    border-color: #1976d2;
+    /* Меняем на синий */
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+    /* Добавляем тень как у place-card */
+}
+
+.event-card-content {
+    display: flex;
+    flex-direction: column;
+    /* Основное содержимое вертикально */
+    flex-grow: 1;
+    /* Занимает доступное пространство */
+}
+
+.event-info {
+    margin-bottom: 10px;
+    /* Отступ снизу для информации */
+}
+
+.event-category {
+    display: inline-block;
+    background-color: #f3e5f5;
+    /* Светло-фиолетовый фон */
+    color: #6a1b9a;
+    /* Темно-фиолетовый текст */
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.event-card h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    color: #1976d2;
+    /* Меняем на синий */
+}
+
+.event-details p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.4;
+}
+
+.event-details p strong {
+    color: #333;
+}
+
+.event-distance {
+    /* color: #777; */
+    /* Убираем серый цвет */
+    font-weight: bold;
+    /* Делаем жирным */
+    margin-top: 8px !important;
+}
+
+/* Убираем отступы у последнего параграфа в деталях */
+.event-details p:last-child {
+    margin-bottom: 0;
+}
+
+.event-card-actions {
+    /* Стили для кнопок действий, если они будут возвращены */
+    margin-top: 10px;
+    text-align: right;
+    /* Выравнивание кнопок */
+    flex-shrink: 0;
+    /* Предотвращаем сжатие кнопок */
+    padding-left: 15px;
+    /* Отступ слева от основного контента */
+}
+
+/* --- КОНЕЦ ДОБАВЛЕНИЯ --- */
+
+/* Стили для модального окна фото - Пересмотрены */
+#photo-modal .photo-modal-content {
+    width: 70vw;
+    height: 75vh;
+    max-width: 1000px;
+    max-height: 800px;
+    padding: 0;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#photo-modal-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+#photo-modal .photo-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    color: #fff;
+    font-size: 35px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1100;
+}
+
+#photo-modal .photo-modal-close:hover,
+#photo-modal .photo-modal-close:focus {
+    color: #bbb;
+    text-decoration: none;
+}
+
+/* --- ДОБАВЛЕНО: Стили для предпросмотра фото в панели деталей "Моего места" --- */
+.my-place-photo-preview {
+    width: 100%;
+    /* Занимает всю доступную ширину */
+    max-width: 300px;
+    /* Максимальная ширина, чтобы не было слишком большим */
+    height: 200px;
+    /* Фиксированная высота */
+    margin: 10px auto;
+    /* Отступы и центрирование */
+    border: 1px solid #eee;
+    /* Легкая рамка */
+    border-radius: 4px;
+    overflow: hidden;
+    /* Скрываем части изображения, выходящие за рамки */
+    display: flex;
+    /* Используем flex для центрирования */
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0;
+    /* Фон на случай, если фото не загрузится */
+}
+
+.my-place-photo-preview img {
+    display: block;
+    max-width: 100%;
+    /* Максимальная ширина равна контейнеру */
+    max-height: 100%;
+    /* Максимальная высота равна контейнеру */
+    width: auto;
+    /* Автоматическая ширина для сохранения пропорций */
+    height: auto;
+    /* Автоматическая высота для сохранения пропорций */
+    object-fit: contain;
+    /* Вписываем изображение с сохранением пропорций */
+}
+
+/* --- КОНЕЦ ДОБАВЛЕНИЯ --- */
+
+/* --- ДОБАВЛЕНО: Отступ между карточками в списке Мои места --- */
+#my-places-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    /* Добавляем расстояние между карточками */
+}
+
+/* --- КОНЕЦ ДОБАВЛЕНИЯ --- */
+
+/* --- ВОЗВРАЩАЕМ И АДАПТИРУЕМ СТИЛИ ДЛЯ #about-container --- */
+/* Применяем стили, похожие на welcome-screen, ТОЛЬКО когда секция активна */
+#about-container.active-section {
+    /* Стили фона и позиционирования от .welcome-screen */
+    position: fixed;
+    /* Чтобы быть поверх всего */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    /* Фон как у welcome-screen */
+    z-index: 1500;
+    /* Чуть ниже welcome-screen (z-index: 2000) */
+    display: flex;
+    /* Используем flex из .welcome-screen для центрирования */
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+    /* Прокрутка из старых стилей #about-container */
+    padding: 20px;
+    /* Отступ из старых стилей #about-container */
+    color: #333;
+    /* Цвет текста из старых стилей */
+}
+
+/* Стили для внутреннего контейнера .about-content (он имеет класс .welcome-content) */
+#about-container .about-content {
+    /* Стили из .welcome-content */
+    max-width: 800px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    text-align: center;
+    /* Центрирование из .welcome-content */
+    /* Убираем центрирование margin auto, т.к. родитель flex */
+}
+
+/* Стили для заголовка H1 внутри (от .welcome-content h1, но без margin)*/
+#about-container .about-content h1 {
+    margin-bottom: 20px;
+    /* Отступ снизу как у h1 в welcome */
+}
+
+/* Стили для блока описания (от .welcome-description) */
+#about-container .welcome-description {
+    text-align: left;
+    /* Выравнивание текста по левому краю */
+    margin: 30px 0;
+    /* Отступы сверху/снизу */
+}
+
+/* Стили для заголовков H2/H3 внутри описания (от .welcome-description h2/h3)*/
+#about-container .welcome-description h2 {
+    /* Если будете использовать h2 */
+    color: #1976d2;
+    margin-bottom: 15px;
+}
+
+#about-container .welcome-description h3 {
+    color: #1976d2;
+    /* Адаптируем цвет */
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+/* Стили для списков (от .welcome-description ul/li)*/
+#about-container .welcome-description ul {
+    list-style: disc;
+    padding-left: 20px;
+    /* Отступ как в welcome */
+    margin-bottom: 20px;
+    /* Отступ как в welcome */
+}
+
+#about-container .welcome-description li {
+    margin-bottom: 8px;
+    /* Отступ как в welcome */
+    line-height: 1.6;
+    /* Межстрочный как у <p> */
+}
+
+/* Стили для параграфов */
+#about-container .welcome-description p {
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+/* Стили для кнопки #btn-back-from-about (копируем из .start-app-btn) */
+#btn-back-from-about {
+    background-color: #1976d2;
+    color: white;
+    font-size: 1.2rem;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+}
+
+#btn-back-from-about:hover {
+    background-color: #1565c0;
+}
+
+/* Удаляем/комментируем старые, теперь ненужные стили */
+/*
+#about-container h2 { ... }
+#about-container p { ... }
+#about-container .about-content { ... }
+#about-container h3 { ... }
+#about-container ul { ... }
+#about-container li { ... }
+*/
+/* --- Конец адаптации стилей --- */
